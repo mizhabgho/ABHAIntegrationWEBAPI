@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ABHAINTEGRATION", "ABHAINTEGRATION\ABHAINTEGRATION.csproj", "{EC476E4C-01CA-4E62-F499-4B73782965AB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EC476E4C-01CA-4E62-F499-4B73782965AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC476E4C-01CA-4E62-F499-4B73782965AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC476E4C-01CA-4E62-F499-4B73782965AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC476E4C-01CA-4E62-F499-4B73782965AB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E973F2D8-D605-4F83-8611-69A8825459DB}
+	EndGlobalSection
+EndGlobal
