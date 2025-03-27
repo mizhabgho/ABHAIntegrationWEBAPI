@@ -1,7 +1,0 @@
-$env:clientId="SBXID_009125"
-$env:clientSecret ="7b7cdaa8-e584-4ce0-8aec-88dbde2b0e4d"
-
-
-Invoke-RestMethod -Uri "http://localhost:5141/api/auth/token" -Method Get
-
-Invoke-RestMethod -Uri "http://localhost:5141/api/auth/certificate" -Method Get
