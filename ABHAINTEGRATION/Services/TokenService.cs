@@ -9,7 +9,7 @@ public class TokenService
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IMemoryCache _cache;
-    private const string AccessTokenKey = "AccessToken";
+    private const string AccessTokenKey = "accessToken"; // ✅ Fixed naming
 
     public TokenService(IHttpClientFactory httpClientFactory, IMemoryCache cache)
     {
@@ -29,21 +29,20 @@ public class TokenService
 
         var requestBody = new
         {
-            clientId = Environment.GetEnvironmentVariable("CLIENT_ID"),
-            clientSecret = Environment.GetEnvironmentVariable("CLIENT_SECRET"),
+            clientId = Environment.GetEnvironmentVariable("clientId"), // ✅ Fixed property names
+            clientSecret = Environment.GetEnvironmentVariable("clientSecret"),
             grantType = "client_credentials"
         };
 
         var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
 
-        // ✅ Add required headers
         var request = new HttpRequestMessage(HttpMethod.Post, "https://dev.abdm.gov.in/api/hiecm/gateway/v3/sessions")
         {
             Content = requestContent
         };
         request.Headers.Add("REQUEST-ID", Guid.NewGuid().ToString());
-        request.Headers.Add("TIMESTAMP", DateTime.UtcNow.ToString("o")); // ISO-8601
-        request.Headers.Add("X-CM-ID", "sbx"); // Sandbox mode
+        request.Headers.Add("TIMESTAMP", DateTime.UtcNow.ToString("o"));
+        request.Headers.Add("X-CM-ID", "sbx");
 
         Console.WriteLine("🔄 Sending request to ABHA API...");
         var response = await client.SendAsync(request);
@@ -62,7 +61,7 @@ public class TokenService
 
         _cache.Set(AccessTokenKey, accessToken, TimeSpan.FromMinutes(55));
         Console.WriteLine("✅ Access token retrieved and cached.");
-        
+
         return accessToken;
     }
 }

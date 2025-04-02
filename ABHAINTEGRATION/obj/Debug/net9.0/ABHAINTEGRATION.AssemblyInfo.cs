@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ABHAINTEGRATION")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6e1f9891b092bdb58d9e179d8a8d38442e3e8898")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+77d4432e0e8db11eae5e04a33b41a7e782094108")]
 [assembly: System.Reflection.AssemblyProductAttribute("ABHAINTEGRATION")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ABHAINTEGRATION")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

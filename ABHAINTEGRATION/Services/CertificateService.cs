@@ -8,7 +8,7 @@ public class CertificateService
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IMemoryCache _cache;
     private readonly TokenService _tokenService;
-    private const string CertificateKey = "PublicCertificate";
+    private const string CertificateKey = "publicKey"; // ✅ Consistent naming
 
     public CertificateService(IHttpClientFactory httpClientFactory, IMemoryCache cache, TokenService tokenService)
     {
@@ -21,14 +21,12 @@ public class CertificateService
     {
         if (_cache.TryGetValue(CertificateKey, out string certificate))
         {
-            Console.WriteLine("✅ Using cached public certificate.");
-            Console.WriteLine($"🔑 Cached Certificate: {certificate}");
+            Console.WriteLine("✅ Using cached public key.");
             return certificate;
         }
 
-        Console.WriteLine("🔄 Fetching new public certificate from ABHA API...");
+        Console.WriteLine("🔄 Fetching new public key from ABHA API...");
         var accessToken = await _tokenService.GetAccessTokenAsync();
-        Console.WriteLine($"🔑 Access Token: {accessToken}");
 
         var client = _httpClientFactory.CreateClient();
         var request = new HttpRequestMessage(HttpMethod.Get, "https://abhasbx.abdm.gov.in/abha/api/v3/profile/public/certificate");
@@ -45,7 +43,7 @@ public class CertificateService
         certificate = responseData;
         _cache.Set(CertificateKey, certificate, TimeSpan.FromMinutes(55));
 
-        Console.WriteLine("✅ Public certificate retrieved and cached.");
+        Console.WriteLine("✅ Public key retrieved and cached.");
 
         return certificate;
     }
