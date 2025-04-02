@@ -21,10 +21,15 @@ public class CertificateService
     {
         if (_cache.TryGetValue(CertificateKey, out string certificate))
         {
+            Console.WriteLine("✅ Using cached public certificate.");
+            Console.WriteLine($"🔑 Cached Certificate: {certificate}");
             return certificate;
         }
 
+        Console.WriteLine("🔄 Fetching new public certificate from ABHA API...");
         var accessToken = await _tokenService.GetAccessTokenAsync();
+        Console.WriteLine($"🔑 Access Token: {accessToken}");
+
         var client = _httpClientFactory.CreateClient();
         var request = new HttpRequestMessage(HttpMethod.Get, "https://abhasbx.abdm.gov.in/abha/api/v3/profile/public/certificate");
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
@@ -32,10 +37,16 @@ public class CertificateService
         request.Headers.Add("TIMESTAMP", DateTime.UtcNow.ToString("o"));
 
         var response = await client.SendAsync(request);
-        if (!response.IsSuccessStatusCode) throw new Exception("Failed to retrieve public certificate");
+        var responseData = await response.Content.ReadAsStringAsync();
 
-        certificate = await response.Content.ReadAsStringAsync();
+        Console.WriteLine($"🔍 Response Status: {response.StatusCode}");
+        Console.WriteLine($"📄 Response Body: {responseData}");
+
+        certificate = responseData;
         _cache.Set(CertificateKey, certificate, TimeSpan.FromMinutes(55));
+
+        Console.WriteLine("✅ Public certificate retrieved and cached.");
+
         return certificate;
     }
 }

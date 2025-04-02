@@ -62,7 +62,7 @@ public class TokenService
 
         _cache.Set(AccessTokenKey, accessToken, TimeSpan.FromMinutes(55));
         Console.WriteLine("✅ Access token retrieved and cached.");
-
+        
         return accessToken;
     }
 }
