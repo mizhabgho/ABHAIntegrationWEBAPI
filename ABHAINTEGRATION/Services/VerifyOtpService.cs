@@ -35,7 +35,7 @@ public class VerifyOtpService
             throw new Exception("Transaction ID not found in cache.");
 
         // Hardcoded encrypted OTP (replace with dynamic if needed)
-        string encryptedOtp = "LejmVDalU29wcBb/DRZD5PpJcgHXASpzHqPjMm2Xq2llJHZdmLUxuH8lG07D9V7q70v6j0b7i5JJCOLw3v+xFzF1XLPBJWjjIE38BMkYs9uvevjaPGZ55USsl7p0l8M0fbbLi4o2BAAScGNTbiPUjiIcAcsDDbeqrxMPbtkyDaYQl881Xz3+biMCUnNgQT79JURKFs+Lzam2Nz7uVo/HrNafO8w9T1Sp52zTLPQwUy+g4JUe09lT/Evz/ZXxhVMXljA+Rcl0PgmEGiGxjj2XcaIxPQbVVj3Zk/ieVRIskqTc9q1bkrdv3/Rb3BBny105PsEUWuODWlMPlbjc6GdzkaBd4UIrRJXjThBvjt6ZFax0nwafF6qLKlhrMX6Smj4WQUiCxPhVYlecFI2Vbj6WSFkK0iM3fxD3Q+15Gz8KUP38RIxWgbSF+lP/sCj5CVnuf/CmFLxgE5c763ntYNlIx8jU1nRQXsUyirkldcI7NcmmMBocmtYIXYdc7uVNPSmXf2xZ4WSSRBiFu6KlA7BZZF3tpzSXBfJlyo4rTqfgd88O60Oq1mB96p+7vqPlmd/y3MgEUjDM6on0M07MmbDrjLMVm6TKsS0f1Ad20JAGNS8RuZfmlBJp5uM7uas+wW/Qft/CMnI7or1TrWLDYMX9T+IN4Gg5Ef+imIRuapPkQuU=";
+        string encryptedOtp = "pxl50ewZmqTwOflmIL50zwlaWGJhJ5kJhSa+J32atVJmTrV7u6J7bArtCf51OsxO23nvIPrRTiYIMkh1H3hhDpwEYpW7Sk8QJuTw465DukohQQzDb93mp8npIkN9/LKBmk7sfzUcrybduuOUwM/L/oZR7dtzno0A9Uv9QLjAw2lKmoBL1Ww+dDYP1v0P6Z5DiEGfE9tq3yvVitd9ZuZ4n5FOef5LhuIq+a5o1KqLuja1oQmP9EGAkOIRT3n+2ispOJ4QTb9OBzMcA72RZ9poS4MS12YkJ6Oq2IDfxpdmKI11mqKidCnyos7Gcr9N4pxxQ1NGPzYkPwFxfg2StVgQsSBD4P5X/I5sEei5da5YD6ERXlAd1d80731G39zsqoBzi+PxDN+e4ewvWqqUQNFfg5Ee6zeT92GbKH2wm1yDhT4Gxo1tKdmB9E1HWx9HzOvM49iyykUc1bGEX68d5WJZgGnJbpKwlcdonexL2yml7PLqZWUS89X51SRE4CDtJwa6uZvDh5+LtzA93Zsgk0a/fWFuK9Ycg/yuPehbYSyMq64QAaLCLho28crka0ej5k5INE9BhYbOev6Th00TbRs52rzho6WGACCbazwtQFQCMhmvOUpuoRdnlcn9WERl5fBDrOEI83S3MZxWJqOWs0/00kty25MwXGkSVs07sz56nqM=";
 
         // Construct request payload
         var requestBody = new
@@ -70,6 +70,7 @@ public class VerifyOtpService
         var response = await client.SendAsync(request);
         var responseData = await response.Content.ReadAsStringAsync();
         Console.WriteLine($"Response Status: {response.StatusCode}");
+        Console.WriteLine($"Response Body: {responseData}");
 
         if (!response.IsSuccessStatusCode)
         {
