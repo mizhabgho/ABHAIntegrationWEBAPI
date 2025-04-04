@@ -23,6 +23,13 @@ public class VerifyOtpService
 
     public async Task<string> VerifyOtpAsync()
     {
+        // Check if JWT token is already cached
+        if (_cache.TryGetValue("jwtToken", out string cachedToken))
+        {
+            Console.WriteLine("✅ Using cached JWT token.");
+            return cachedToken;
+        }
+
         var client = _httpClientFactory.CreateClient();
 
         // Get access token
@@ -35,7 +42,7 @@ public class VerifyOtpService
             throw new Exception("Transaction ID not found in cache.");
 
         // Hardcoded encrypted OTP (replace with dynamic if needed)
-        string encryptedOtp = "pxl50ewZmqTwOflmIL50zwlaWGJhJ5kJhSa+J32atVJmTrV7u6J7bArtCf51OsxO23nvIPrRTiYIMkh1H3hhDpwEYpW7Sk8QJuTw465DukohQQzDb93mp8npIkN9/LKBmk7sfzUcrybduuOUwM/L/oZR7dtzno0A9Uv9QLjAw2lKmoBL1Ww+dDYP1v0P6Z5DiEGfE9tq3yvVitd9ZuZ4n5FOef5LhuIq+a5o1KqLuja1oQmP9EGAkOIRT3n+2ispOJ4QTb9OBzMcA72RZ9poS4MS12YkJ6Oq2IDfxpdmKI11mqKidCnyos7Gcr9N4pxxQ1NGPzYkPwFxfg2StVgQsSBD4P5X/I5sEei5da5YD6ERXlAd1d80731G39zsqoBzi+PxDN+e4ewvWqqUQNFfg5Ee6zeT92GbKH2wm1yDhT4Gxo1tKdmB9E1HWx9HzOvM49iyykUc1bGEX68d5WJZgGnJbpKwlcdonexL2yml7PLqZWUS89X51SRE4CDtJwa6uZvDh5+LtzA93Zsgk0a/fWFuK9Ycg/yuPehbYSyMq64QAaLCLho28crka0ej5k5INE9BhYbOev6Th00TbRs52rzho6WGACCbazwtQFQCMhmvOUpuoRdnlcn9WERl5fBDrOEI83S3MZxWJqOWs0/00kty25MwXGkSVs07sz56nqM=";
+        string encryptedOtp = "ckI6sRuKDf+H/K4O6283EYJHZ/cCS3p9gQ0a4uIt2SAx4/oc0i5Tm/JEqQ8yx27zhZy1to+z3NY8llTIkDhGnp4at/9vfMI0nhika3axNMvfaA73aONXPrNQ91VY+Cr0QzZdCty9HKW4y0KzyPWv+dZA2/r61eesQet2iFzrDPEPvcRWQKpTa1UlkMvrCAzmvO6pWnaN5ykvqe3RdWLymAAKaCagsjqy4vjxk4pLK0u4Qs9KkrRplqKs8qietVmJPmsETeDYJW+U6OFh7H6B4etSziiUAdwHhXzEuivvtEUGmO6UclXN96sGvpvw2mUUEC2dNb6VGDCBqdWojJ0heiOu4tTx1/PvanbAMm6REJsFCgFWc3CIEn1vYEWZ9sO0nhPjuNlsJ5cIy+OKW3hL3PH2qFumINea8bL+2YwTgyj/AUOiFh4uwGhuoYmO35VEHHSX9wjoJhftHn6VBKI+XGsFx4PtBU9KxcX4EqY7thzaxVQaPhdDqeEcpAjxxQUceirVUbrqAynMqUYhpqFQMX9DlmNU3G3jM6odDk8hujtx5nk2vnrAAi9GhKWIB8s247bzODmKvM1mUSz+Le3mJm3KuB2prCRMisF9nJOO6KGOsYDeI0+OUSVdtyEAfKyritji6yCGwFtPsBLGi7Kppe2tLdxdBzO06vC7dOtZIDA=";
 
         // Construct request payload
         var requestBody = new
@@ -66,15 +73,15 @@ public class VerifyOtpService
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
         // Send request
-        Console.WriteLine("Sending OTP verification request...");
+        Console.WriteLine("📨 Sending OTP verification request...");
         var response = await client.SendAsync(request);
         var responseData = await response.Content.ReadAsStringAsync();
-        Console.WriteLine($"Response Status: {response.StatusCode}");
-        Console.WriteLine($"Response Body: {responseData}");
+        Console.WriteLine($"📥 Response Status: {response.StatusCode}");
+        Console.WriteLine($"📄 Response Body: {responseData}");
 
         if (!response.IsSuccessStatusCode)
         {
-            Console.WriteLine("OTP verification failed.");
+            Console.WriteLine("❌ OTP verification failed.");
             return responseData;
         }
 
@@ -83,12 +90,14 @@ public class VerifyOtpService
             var jsonData = JsonSerializer.Deserialize<JsonElement>(responseData);
             var jwtToken = jsonData.GetProperty("token").GetString();
 
-            Console.WriteLine($"OTP Verified. JWT Token:\n{jwtToken}");
+            // ✅ Cache the JWT token
+            _cache.Set("jwtToken", jwtToken, TimeSpan.FromMinutes(55));
+            Console.WriteLine("✅ JWT Token retrieved and cached.");
             return jwtToken;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed to parse JWT token. Error: {ex.Message}");
+            Console.WriteLine($"⚠️ Failed to parse JWT token. Error: {ex.Message}");
             return responseData;
         }
     }
