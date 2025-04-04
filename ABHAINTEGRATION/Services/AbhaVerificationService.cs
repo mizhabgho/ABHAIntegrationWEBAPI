@@ -66,6 +66,7 @@ public class AbhaVerificationService
         // Read response
         var responseData = await response.Content.ReadAsStringAsync();
         Console.WriteLine($"Response Status: {response.StatusCode}");
+        Console.WriteLine($"Response Body: {responseData}");
 
         // Check response
         if (!response.IsSuccessStatusCode)
