@@ -102,12 +102,18 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var response = await _verifyUserService.VerifyUserAsync();
-            return Ok(new { response });
+            var token = await _verifyUserService.VerifyUserAsync();
+            return Ok(new { Token = token });
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"❌ Controller error: {ex.Message}");
+            return BadRequest(new { Error = ex.Message });
         }
         catch (Exception ex)
         {
-            return BadRequest(new { error = "User verification failed", message = ex.Message });
+            Console.WriteLine($"❌ Controller error: {ex.Message}\nStackTrace: {ex.StackTrace}");
+            return BadRequest(new { Error = "An unexpected error occurred." });
         }
     }
 }
