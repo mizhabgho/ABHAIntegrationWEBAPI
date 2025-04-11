@@ -25,14 +25,14 @@ public class VerifyUserService
     public async Task<string> VerifyUserAsync()
     {
         // Hardcoded ABHA number (temporary; replace with a VALID ABHA number registered in ABDM sandbox)
-        const string abhaNumber = "91-4722-6124-3340"; // From VerifyOtpAsync accounts
+        const string ABHANumber = "91-4722-6124-3340"; // From VerifyOtpAsync accounts
         // Alternative: Try preferredAbhaAddress if ABHA number fails
-        const string preferredAbhaAddress = "mizhab_720032003@sbx"; // From VerifyOtpAsync accounts
+        //const string preferredAbhaAddress = "mizhab_720032003@sbx"; // From VerifyOtpAsync accounts
 
         // Validate ABHA number format
-        if (!Regex.IsMatch(abhaNumber, @"^\d{2}-\d{4}-\d{4}-\d{4}$"))
+        if (!Regex.IsMatch(ABHANumber, @"^\d{2}-\d{4}-\d{4}-\d{4}$"))
         {
-            var error = $"Invalid ABHA number format: {abhaNumber}. Expected: XX-XXXX-XXXX-XXXX";
+            var error = $"Invalid ABHA number format: {ABHANumber}. Expected: XX-XXXX-XXXX-XXXX";
             Console.WriteLine($"❌ {error}");
             throw new ArgumentException(error);
         }
@@ -71,8 +71,8 @@ public class VerifyUserService
         // Prepare request payload
         var requestBody = new
         {
-            abhaNumber, // Try ABHA number first
-            // abhaNumber = preferredAbhaAddress, // Uncomment to try preferredAbhaAddress
+            ABHANumber, // Try ABHA number first
+            //ABHANumber = preferredAbhaAddress, // Uncomment to try preferredAbhaAddress
             txnId
         };
 
@@ -137,7 +137,7 @@ public class VerifyUserService
             {
                 Token = token,
                 RefreshToken = refreshToken,
-                AbhaNumber = abhaNumber
+                ABHANumber = ABHANumber
             };
             string logJson = JsonSerializer.Serialize(logObject, new JsonSerializerOptions { WriteIndented = true });
             Console.WriteLine($"✅ User verification successful:\n{logJson}");
