@@ -10,20 +10,25 @@ public class AuthController : ControllerBase
     private readonly CertificateService _certificateService;
     private readonly AbhaVerificationService _abhaVerificationService;
     private readonly VerifyOtpService _verifyOtpService;
+    private readonly VerifyUserService _verifyUserService;
 
     public AuthController(
         TokenService tokenService,
         CertificateService certificateService,
         AbhaVerificationService abhaVerificationService,
-        VerifyOtpService verifyOtpService) // Injected here
+        VerifyOtpService verifyOtpService,
+        VerifyUserService verifyUserService)
     {
         _tokenService = tokenService;
         _certificateService = certificateService;
         _abhaVerificationService = abhaVerificationService;
-        _verifyOtpService = verifyOtpService; // Assigned here
+        _verifyOtpService = verifyOtpService;
+        _verifyUserService = verifyUserService;
     }
 
-    // ✅ Generate Access Token
+    /// <summary>
+    /// 🔐 Generate Access Token
+    /// </summary>
     [HttpGet("token")]
     public async Task<IActionResult> GetAccessToken()
     {
@@ -38,7 +43,9 @@ public class AuthController : ControllerBase
         }
     }
 
-    // ✅ Get Public Certificate (Public Key)
+    /// <summary>
+    /// 🔑 Get Public Certificate (Public Key)
+    /// </summary>
     [HttpGet("certificate")]
     public async Task<IActionResult> GetPublicCertificate()
     {
@@ -53,7 +60,9 @@ public class AuthController : ControllerBase
         }
     }
 
-    // ✅ Send OTP (Mobile Number is hardcoded inside AbhaVerificationService)
+    /// <summary>
+    /// 📩 Send OTP (Mobile Number is hardcoded inside service)
+    /// </summary>
     [HttpPost("send-otp")]
     public async Task<IActionResult> SendOtp()
     {
@@ -68,7 +77,9 @@ public class AuthController : ControllerBase
         }
     }
 
-    // ✅ Verify OTP (Encrypted OTP is hardcoded inside VerifyOtpService)
+    /// <summary>
+    /// ✅ Verify OTP (Encrypted OTP is hardcoded inside service)
+    /// </summary>
     [HttpPost("verify-otp")]
     public async Task<IActionResult> VerifyOtp()
     {
@@ -80,6 +91,23 @@ public class AuthController : ControllerBase
         catch (Exception ex)
         {
             return BadRequest(new { error = "OTP verification failed", message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// 👤 Verify ABHA User (using cached txnId & jwtToken)
+    /// </summary>
+    [HttpPost("verify-user")]
+    public async Task<IActionResult> VerifyUser()
+    {
+        try
+        {
+            var response = await _verifyUserService.VerifyUserAsync();
+            return Ok(new { response });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = "User verification failed", message = ex.Message });
         }
     }
 }
