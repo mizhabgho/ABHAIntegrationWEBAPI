@@ -33,7 +33,13 @@ namespace AbhaProfileApi.Services
 
         private void AddCommonHeaders(HttpRequestMessage request)
         {
-            var xToken = _cache.Get<string>("xToken") ?? throw new InvalidOperationException("X-Token missing from cache");
+            var xToken = _cache.Get<string>("xToken");
+            if (string.IsNullOrEmpty(xToken))
+            {
+                Console.WriteLine("❌ X-Token not found in cache.");
+                throw new InvalidOperationException("X-Token missing from cache");
+            }
+            Console.WriteLine($"✅ Using X-Token: {xToken.Substring(0, Math.Min(20, xToken.Length))}...");
             request.Headers.Add("X-Token", $"Bearer {xToken}");
             request.Headers.Add("REQUEST-ID", Guid.NewGuid().ToString());
             request.Headers.Add("TIMESTAMP", DateTime.UtcNow.ToString("O"));

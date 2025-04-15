@@ -127,7 +127,7 @@ namespace AbhaProfileApi.Controllers
             }
         }
 
-        /// <summary>
+                /// <summary>
         /// 📋 Get ABHA Profile Details
         /// </summary>
         [HttpGet("profile-details")]
@@ -135,8 +135,19 @@ namespace AbhaProfileApi.Controllers
         {
             try
             {
+                await _verifyUserService.VerifyUserAsync(); // Ensure xToken is cached
                 var result = await _profileService.GetProfileDetailsAsync();
                 return Ok(new { Success = true, Data = result });
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("X-Token missing"))
+            {
+                Console.WriteLine($"❌ Controller error: {ex.Message}");
+                return BadRequest(new { error = "Authentication required. Please verify user first.", message = ex.Message });
+            }
+            catch (HttpRequestException ex) when (ex.Message.Contains("401"))
+            {
+                Console.WriteLine($"❌ Controller error: {ex.Message}");
+                return BadRequest(new { error = "Unauthorized access to ABHA API.", message = ex.Message });
             }
             catch (Exception ex)
             {
@@ -153,8 +164,19 @@ namespace AbhaProfileApi.Controllers
         {
             try
             {
+                await _verifyUserService.VerifyUserAsync(); // Ensure xToken is cached
                 var result = await _profileService.GetQrCodeAsync();
                 return Ok(new { Success = true, Data = result });
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("X-Token missing"))
+            {
+                Console.WriteLine($"❌ Controller error: {ex.Message}");
+                return BadRequest(new { error = "Authentication required. Please verify user first.", message = ex.Message });
+            }
+            catch (HttpRequestException ex) when (ex.Message.Contains("401"))
+            {
+                Console.WriteLine($"❌ Controller error: {ex.Message}");
+                return BadRequest(new { error = "Unauthorized access to ABHA API.", message = ex.Message });
             }
             catch (Exception ex)
             {
@@ -171,9 +193,24 @@ namespace AbhaProfileApi.Controllers
         {
             try
             {
+                await _verifyUserService.VerifyUserAsync(); // Ensure xToken is cached
                 var encryptedPhoto = _configuration["Abha:EncryptedProfilePhoto"];
+                if (string.IsNullOrEmpty(encryptedPhoto))
+                {
+                    return BadRequest(new { error = "Encrypted profile photo not configured." });
+                }
                 var result = await _profileService.UpdateProfilePhotoAsync(encryptedPhoto);
                 return Ok(new { Success = true, Data = result });
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("X-Token missing"))
+            {
+                Console.WriteLine($"❌ Controller error: {ex.Message}");
+                return BadRequest(new { error = "Authentication required. Please verify user first.", message = ex.Message });
+            }
+            catch (HttpRequestException ex) when (ex.Message.Contains("401"))
+            {
+                Console.WriteLine($"❌ Controller error: {ex.Message}");
+                return BadRequest(new { error = "Unauthorized access to ABHA API.", message = ex.Message });
             }
             catch (Exception ex)
             {
@@ -190,8 +227,19 @@ namespace AbhaProfileApi.Controllers
         {
             try
             {
+                await _verifyUserService.VerifyUserAsync(); // Ensure xToken is cached
                 var result = await _profileService.DownloadAbhaCardAsync();
                 return Ok(new { Success = true, Data = result });
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("X-Token missing"))
+            {
+                Console.WriteLine($"❌ Controller error: {ex.Message}");
+                return BadRequest(new { error = "Authentication required. Please verify user first.", message = ex.Message });
+            }
+            catch (HttpRequestException ex) when (ex.Message.Contains("401"))
+            {
+                Console.WriteLine($"❌ Controller error: {ex.Message}");
+                return BadRequest(new { error = "Unauthorized access to ABHA API.", message = ex.Message });
             }
             catch (Exception ex)
             {
