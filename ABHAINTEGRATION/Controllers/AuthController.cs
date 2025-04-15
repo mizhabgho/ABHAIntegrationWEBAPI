@@ -1,119 +1,208 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using AbhaProfileApi.Services; // Added for IProfileManagementService
 
-[ApiController]
-[Route("api/auth")]
-public class AuthController : ControllerBase
+namespace AbhaProfileApi.Controllers
 {
-    private readonly TokenService _tokenService;
-    private readonly CertificateService _certificateService;
-    private readonly AbhaVerificationService _abhaVerificationService;
-    private readonly VerifyOtpService _verifyOtpService;
-    private readonly VerifyUserService _verifyUserService;
-
-    public AuthController(
-        TokenService tokenService,
-        CertificateService certificateService,
-        AbhaVerificationService abhaVerificationService,
-        VerifyOtpService verifyOtpService,
-        VerifyUserService verifyUserService)
+    [ApiController]
+    [Route("api/auth")]
+    public class AuthController : ControllerBase
     {
-        _tokenService = tokenService;
-        _certificateService = certificateService;
-        _abhaVerificationService = abhaVerificationService;
-        _verifyOtpService = verifyOtpService;
-        _verifyUserService = verifyUserService;
-    }
+        private readonly TokenService _tokenService;
+        private readonly CertificateService _certificateService;
+        private readonly AbhaVerificationService _abhaVerificationService;
+        private readonly VerifyOtpService _verifyOtpService;
+        private readonly VerifyUserService _verifyUserService;
+        private readonly IProfileManagementService _profileService;
+        private readonly IConfiguration _configuration;
 
-    /// <summary>
-    /// 🔐 Generate Access Token
-    /// </summary>
-    [HttpGet("token")]
-    public async Task<IActionResult> GetAccessToken()
-    {
-        try
+        public AuthController(
+            TokenService tokenService,
+            CertificateService certificateService,
+            AbhaVerificationService abhaVerificationService,
+            VerifyOtpService verifyOtpService,
+            VerifyUserService verifyUserService,
+            IProfileManagementService profileService,
+            IConfiguration configuration)
         {
-            var token = await _tokenService.GetAccessTokenAsync();
-            return Ok(new { accessToken = token });
+            _tokenService = tokenService;
+            _certificateService = certificateService;
+            _abhaVerificationService = abhaVerificationService;
+            _verifyOtpService = verifyOtpService;
+            _verifyUserService = verifyUserService;
+            _profileService = profileService;
+            _configuration = configuration;
         }
-        catch (Exception ex)
-        {
-            return BadRequest(new { error = "Failed to generate access token", message = ex.Message });
-        }
-    }
 
-    /// <summary>
-    /// 🔑 Get Public Certificate (Public Key)
-    /// </summary>
-    [HttpGet("certificate")]
-    public async Task<IActionResult> GetPublicCertificate()
-    {
-        try
+        /// <summary>
+        /// 🔐 Generate Access Token
+        /// </summary>
+        [HttpGet("token")]
+        public async Task<IActionResult> GetAccessToken()
         {
-            var publicKey = await _certificateService.GetPublicCertificateAsync();
-            return Ok(new { publicKey });
+            try
+            {
+                var token = await _tokenService.GetAccessTokenAsync();
+                return Ok(new { accessToken = token });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = "Failed to generate access token", message = ex.Message });
+            }
         }
-        catch (Exception ex)
-        {
-            return BadRequest(new { error = "Failed to fetch public key", message = ex.Message });
-        }
-    }
 
-    /// <summary>
-    /// 📩 Send OTP (Mobile Number is hardcoded inside service)
-    /// </summary>
-    [HttpPost("send-otp")]
-    public async Task<IActionResult> SendOtp()
-    {
-        try
+        /// <summary>
+        /// 🔑 Get Public Certificate (Public Key)
+        /// </summary>
+        [HttpGet("certificate")]
+        public async Task<IActionResult> GetPublicCertificate()
         {
-            var txnId = await _abhaVerificationService.SendOtpAsync();
-            return Ok(new { txnId });
+            try
+            {
+                var publicKey = await _certificateService.GetPublicCertificateAsync();
+                return Ok(new { publicKey });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = "Failed to fetch public key", message = ex.Message });
+            }
         }
-        catch (Exception ex)
-        {
-            return BadRequest(new { error = "Failed to send OTP", message = ex.Message });
-        }
-    }
 
-    /// <summary>
-    /// ✅ Verify OTP (Encrypted OTP is hardcoded inside service)
-    /// </summary>
-    [HttpPost("verify-otp")]
-    public async Task<IActionResult> VerifyOtp()
-    {
-        try
+        /// <summary>
+        /// 📩 Send OTP (Mobile Number is hardcoded inside service)
+        /// </summary>
+        [HttpPost("send-otp")]
+        public async Task<IActionResult> SendOtp()
         {
-            var jwtToken = await _verifyOtpService.VerifyOtpAsync();
-            return Ok(new { token = jwtToken });
+            try
+            {
+                var txnId = await _abhaVerificationService.SendOtpAsync();
+                return Ok(new { txnId });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = "Failed to send OTP", message = ex.Message });
+            }
         }
-        catch (Exception ex)
-        {
-            return BadRequest(new { error = "OTP verification failed", message = ex.Message });
-        }
-    }
 
-    /// <summary>
-    /// 👤 Verify ABHA User (using cached txnId & jwtToken)
-    /// </summary>
-    [HttpPost("verify-user")]
-    public async Task<IActionResult> VerifyUser()
-    {
-        try
+        /// <summary>
+        /// ✅ Verify OTP (Encrypted OTP is hardcoded inside service)
+        /// </summary>
+        [HttpPost("verify-otp")]
+        public async Task<IActionResult> VerifyOtp()
         {
-            var token = await _verifyUserService.VerifyUserAsync();
-            return Ok(new { Token = token });
+            try
+            {
+                var jwtToken = await _verifyOtpService.VerifyOtpAsync();
+                return Ok(new { token = jwtToken });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = "OTP verification failed", message = ex.Message });
+            }
         }
-        catch (HttpRequestException ex)
+
+        /// <summary>
+        /// 👤 Verify ABHA User (using cached txnId & jwtToken)
+        /// </summary>
+        [HttpPost("verify-user")]
+        public async Task<IActionResult> VerifyUser()
         {
-            Console.WriteLine($"❌ Controller error: {ex.Message}");
-            return BadRequest(new { Error = ex.Message });
+            try
+            {
+                var token = await _verifyUserService.VerifyUserAsync();
+                return Ok(new { Token = token });
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"❌ Controller error: {ex.Message}");
+                return BadRequest(new { Error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Controller error: {ex.Message}\nStackTrace: {ex.StackTrace}");
+                return BadRequest(new { Error = "An unexpected error occurred." });
+            }
         }
-        catch (Exception ex)
+
+        /// <summary>
+        /// 📋 Get ABHA Profile Details
+        /// </summary>
+        [HttpGet("profile-details")]
+        public async Task<IActionResult> GetProfileDetails()
         {
-            Console.WriteLine($"❌ Controller error: {ex.Message}\nStackTrace: {ex.StackTrace}");
-            return BadRequest(new { Error = "An unexpected error occurred." });
+            try
+            {
+                var xToken = _configuration["Abha:XToken"];
+                var result = await _profileService.GetProfileDetailsAsync(xToken);
+                return Ok(new { Success = true, Data = result });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Controller error: {ex.Message}");
+                return BadRequest(new { error = "Failed to fetch profile details", message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 📷 Get ABHA QR Code
+        /// </summary>
+        [HttpGet("qrcode")]
+        public async Task<IActionResult> GetQrCode()
+        {
+            try
+            {
+                var xToken = _configuration["Abha:XToken"];
+                var result = await _profileService.GetQrCodeAsync(xToken);
+                return Ok(new { Success = true, Data = result });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Controller error: {ex.Message}");
+                return BadRequest(new { error = "Failed to fetch QR code", message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 🖼️ Update ABHA Profile Photo
+        /// </summary>
+        [HttpPatch("photo")]
+        public async Task<IActionResult> UpdateProfilePhoto()
+        {
+            try
+            {
+                var xToken = _configuration["Abha:XToken"];
+                var encryptedPhoto = _configuration["Abha:EncryptedProfilePhoto"];
+                
+                var result = await _profileService.UpdateProfilePhotoAsync(xToken, encryptedPhoto);
+                return Ok(new { Success = true, Data = result });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Controller error: {ex.Message}");
+                return BadRequest(new { error = "Failed to update profile photo", message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 💳 Download ABHA Card
+        /// </summary>
+        [HttpGet("abha-card")]
+        public async Task<IActionResult> DownloadAbhaCard()
+        {
+            try
+            {
+                var xToken = _configuration["Abha:XToken"];
+                var result = await _profileService.DownloadAbhaCardAsync(xToken);
+                return Ok(new { Success = true, Data = result });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Controller error: {ex.Message}");
+                return BadRequest(new { error = "Failed to download ABHA card", message = ex.Message });
+            }
         }
     }
 }

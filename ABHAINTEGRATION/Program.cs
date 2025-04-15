@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Caching.Memory;
+using AbhaProfileApi.Services; // Added for IProfileManagementService and ProfileManagementService
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +12,7 @@ builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<CertificateService>();
 builder.Services.AddScoped<AbhaVerificationService>();
 builder.Services.AddScoped<VerifyOtpService>();
+builder.Services.AddScoped<IProfileManagementService, ProfileManagementService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient();
 builder.Services.AddControllers();

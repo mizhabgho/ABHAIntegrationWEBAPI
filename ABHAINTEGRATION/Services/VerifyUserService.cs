@@ -2,159 +2,156 @@ using System;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
-using System.Text.RegularExpressions;
 
 public class VerifyUserService
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IMemoryCache _cache;
     private readonly TokenService _tokenService;
+    private const string ApiUrl = "https://abhasbx.abdm.gov.in/abha/api/v3/profile/login/verify/user";
 
     public VerifyUserService(
         IHttpClientFactory httpClientFactory,
         IMemoryCache cache,
         TokenService tokenService)
     {
-        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
-        _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
+        _httpClientFactory = httpClientFactory;
+        _cache = cache;
+        _tokenService = tokenService;
     }
 
     public async Task<string> VerifyUserAsync()
     {
-        // Hardcoded ABHA number (temporary; replace with a VALID ABHA number registered in ABDM sandbox)
-        const string ABHANumber = "91-4722-6124-3340"; // From VerifyOtpAsync accounts
-        // Alternative: Try preferredAbhaAddress if ABHA number fails
-        //const string preferredAbhaAddress = "mizhab_720032003@sbx"; // From VerifyOtpAsync accounts
+        const string abhaNumber = "91-4722-6124-3340";
+        var (accessToken, jwtToken, txnId) = await ValidateAndGetTokens();
 
-        // Validate ABHA number format
-        if (!Regex.IsMatch(ABHANumber, @"^\d{2}-\d{4}-\d{4}-\d{4}$"))
+        if (!IsValidAbhaFormat(abhaNumber))
         {
-            var error = $"Invalid ABHA number format: {ABHANumber}. Expected: XX-XXXX-XXXX-XXXX";
-            Console.WriteLine($"❌ {error}");
-            throw new ArgumentException(error);
+            throw new ArgumentException($"Invalid ABHA number format: {abhaNumber}");
         }
 
-        var client = _httpClientFactory.CreateClient();
+        using var request = CreateRequest(abhaNumber, accessToken, jwtToken, txnId);
+        return await ExecuteRequest(request);
+    }
 
-        // Get access token from cache or TokenService
-        if (!_cache.TryGetValue("accessToken", out string accessToken) || string.IsNullOrEmpty(accessToken))
-        {
-            accessToken = await _tokenService.GetAccessTokenAsync();
-            if (string.IsNullOrEmpty(accessToken))
-            {
-                var error = "Failed to retrieve access token.";
-                Console.WriteLine($"❌ {error}");
-                throw new Exception(error);
-            }
-            _cache.Set("accessToken", accessToken, TimeSpan.FromMinutes(55));
-        }
+    private bool IsValidAbhaFormat(string abhaNumber)
+    {
+        return Regex.IsMatch(abhaNumber, @"^\d{2}-\d{4}-\d{4}-\d{4}$");
+    }
 
-        // Get JWT token from cache
-        if (!_cache.TryGetValue("jwtToken", out string jwtToken) || string.IsNullOrEmpty(jwtToken))
-        {
-            var error = "JWT token not found in cache. Please verify OTP first.";
-            Console.WriteLine($"❌ {error}");
-            throw new InvalidOperationException(error);
-        }
+    private async Task<(string accessToken, string jwtToken, string txnId)> ValidateAndGetTokens()
+    {
+        var accessToken = await GetCachedToken("accessToken", _tokenService.GetAccessTokenAsync);
+        var jwtToken = _cache.Get<string>("jwtToken") ?? throw new InvalidOperationException("JWT token missing");
+        var txnId = _cache.Get<string>("txnId") ?? throw new InvalidOperationException("Transaction ID missing");
+        
+        return (accessToken.Trim(), jwtToken.Trim(), txnId.Trim());
+    }
 
-        // Get txnId from cache
-        if (!_cache.TryGetValue("txnId", out string txnId) || string.IsNullOrEmpty(txnId))
+    private HttpRequestMessage CreateRequest(string abhaNumber, string accessToken, string jwtToken, string txnId)
+    {
+        var requestBody = new VerifyUserRequest
         {
-            var error = "Transaction ID not found in cache. Please initiate OTP request first.";
-            Console.WriteLine($"❌ {error}");
-            throw new InvalidOperationException(error);
-        }
-
-        // Prepare request payload
-        var requestBody = new
-        {
-            ABHANumber, // Try ABHA number first
-            //ABHANumber = preferredAbhaAddress, // Uncomment to try preferredAbhaAddress
-            txnId
+            ABHANumber = abhaNumber,
+            TxnId = txnId
         };
 
-        var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-        var requestBodyJson = JsonSerializer.Serialize(requestBody, jsonOptions);
-        var requestContent = new StringContent(requestBodyJson, Encoding.UTF8, "application/json");
-
-        // Create HTTP request
-        var request = new HttpRequestMessage(HttpMethod.Post, "https://abhasbx.abdm.gov.in/abha/api/v3/profile/login/verify/user")
+        var request = new HttpRequestMessage(HttpMethod.Post, ApiUrl)
         {
-            Content = requestContent
+            Content = new StringContent(
+                JsonSerializer.Serialize(requestBody, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = null, // Disable camelCase conversion
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                }),
+                Encoding.UTF8,
+                "application/json")
         };
+
+        AddHeaders(request, accessToken, jwtToken);
+        LogRequestDetails(request);
+        
+        return request;
+    }
+
+    private void AddHeaders(HttpRequestMessage request, string accessToken, string jwtToken)
+    {
         request.Headers.Add("T-token", $"Bearer {jwtToken}");
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
         request.Headers.Add("REQUEST-ID", Guid.NewGuid().ToString());
         request.Headers.Add("TIMESTAMP", DateTime.UtcNow.ToString("o"));
+    }
 
-        // Send request
-        Console.WriteLine("📨 Sending user verification request...");
-        Console.WriteLine($"📄 Request Payload: {requestBodyJson}");
+    private async Task<string> ExecuteRequest(HttpRequestMessage request)
+    {
+        using var client = _httpClientFactory.CreateClient();
         var response = await client.SendAsync(request);
-        var responseData = await response.Content.ReadAsStringAsync();
-
+        var responseContent = await response.Content.ReadAsStringAsync();
+        // Added response logging
         Console.WriteLine($"📥 Response Status: {response.StatusCode}");
-        Console.WriteLine($"📄 Response Body: {responseData}");
-
+        Console.WriteLine($"📄 Response Body: {responseContent}");
+        
         if (!response.IsSuccessStatusCode)
         {
-            var error = $"User verification failed with status {response.StatusCode}: {responseData}";
-            Console.WriteLine($"❌ {error}");
-            throw new HttpRequestException(error);
+            throw new HttpRequestException(
+                $"Request failed with status {response.StatusCode}. Response: {responseContent}");
         }
 
-        try
+        return ProcessSuccessfulResponse(responseContent);
+    }
+
+    private string ProcessSuccessfulResponse(string responseContent)
+    {
+        using var jsonDoc = JsonDocument.Parse(responseContent);
+        var root = jsonDoc.RootElement;
+
+        var token = root.GetProperty("token").GetString() 
+            ?? throw new InvalidOperationException("Token missing in response");
+        var refreshToken = root.GetProperty("refreshToken").GetString() 
+            ?? throw new InvalidOperationException("Refresh token missing in response");
+
+        CacheNewTokens(token, refreshToken);
+        return token;
+    }
+
+    private void CacheNewTokens(string token, string refreshToken)
+    {
+        _cache.Set("jwtToken", token, TimeSpan.FromMinutes(55));
+        _cache.Set("refreshToken", refreshToken, TimeSpan.FromDays(7));
+    }
+
+    private async Task<string> GetCachedToken(string key, Func<Task<string>> fetchToken)
+    {
+        return await _cache.GetOrCreateAsync(key, async entry =>
         {
-            var jsonData = JsonSerializer.Deserialize<JsonElement>(responseData);
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(55);
+            return await fetchToken();
+        }) ?? throw new InvalidOperationException($"Failed to retrieve {key}");
+    }
 
-            // Validate token and refreshToken
-            if (!jsonData.TryGetProperty("token", out var tokenElement) || !jsonData.TryGetProperty("refreshToken", out var refreshTokenElement))
-            {
-                var error = "Response missing token or refreshToken.";
-                Console.WriteLine($"❌ {error}");
-                throw new Exception(error);
-            }
-
-            var token = tokenElement.GetString();
-            var refreshToken = refreshTokenElement.GetString();
-
-            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(refreshToken))
-            {
-                var error = "Received empty token or refreshToken.";
-                Console.WriteLine($"❌ {error}");
-                throw new Exception(error);
-            }
-
-            // Cache the tokens
-            _cache.Set("jwtToken", token, TimeSpan.FromMinutes(55));
-            _cache.Set("refreshToken", refreshToken, TimeSpan.FromDays(7));
-
-            // Log success
-            var logObject = new
-            {
-                Token = token,
-                RefreshToken = refreshToken,
-                ABHANumber = ABHANumber
-            };
-            string logJson = JsonSerializer.Serialize(logObject, new JsonSerializerOptions { WriteIndented = true });
-            Console.WriteLine($"✅ User verification successful:\n{logJson}");
-
-            return token;
-        }
-        catch (JsonException ex)
+    private void LogRequestDetails(HttpRequestMessage request)
+    {
+        Console.WriteLine($"Request Headers: {string.Join(", ", request.Headers)}");
+        Console.WriteLine($"Request Method: {request.Method}");
+        Console.WriteLine($"Request URI: {request.RequestUri}");
+        
+        if (request.Content is StringContent content)
         {
-            var error = $"Failed to parse verify user response: {ex.Message}";
-            Console.WriteLine($"⚠️ {error}");
-            throw new Exception($"Response parsing failed: {responseData}", ex);
+            var body = content.ReadAsStringAsync().Result;
+            Console.WriteLine($"Request Body: {body}");
         }
-        catch (Exception ex)
-        {
-            var error = $"User verification processing failed: {ex.Message}";
-            Console.WriteLine($"⚠️ {error}");
-            throw;
-        }
+    }
+
+    private class VerifyUserRequest
+    {
+        [JsonPropertyName("ABHANumber")]
+        public string ABHANumber { get; set; }
+
+        [JsonPropertyName("txnId")]
+        public string TxnId { get; set; }
     }
 }
