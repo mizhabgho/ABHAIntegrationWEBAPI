@@ -42,7 +42,7 @@ public class VerifyOtpService
             throw new Exception("Transaction ID not found in cache.");
 
         // Hardcoded encrypted OTP (replace with dynamic if needed)
-        string encryptedOtp = "CGDTfW3lJ0HBFp5DoMDoVQ7bxGzMMe6FUNbqqrad8PNcMupB5D0oLJCFuL977hoPHk6coEPAjo/e7rnvg0/B7swBVczZUSgnTwHlfi/Tm4mCC5DEoxwPAQTRoGL1WfZYinFvYeGI15/SqxeKiVSh2JlU9VGIoCUDnsmlDjd4Rcuo5TK+og/8PWWr1Ri3aDwjEkZUq61PaQa09d/LtukdQqdxkxXo9GuPcykLGTS7qyGzP7kP8ppwq+KvjOY/msy0MRo34gQtt0AoCRdGfksfp4Hd30u1AyGVgJ56cANhQ7RFLvUjtVHaSJ2h7izh7GQQSRJBELbu2Qehf20vsiXNJazoXgO/VJ86gm576gxAoF61wjItf8DZmoEpQ3NAlJ5Abydx4+9VSdzZGUMaASEfEZ9ISVgzHviqmkH9VneSM4ySSa+s0eNtBcHWlaejYTgrI8h/QDyz09U39PxY6YqW/i/GSsqGPHlKcC4rTl/Glz/J1gftY+eh/qTqjH8z9T1kJNTufSttztZ2V36z2sXJv8GHRsHYdMBaxUugiky4QpTi/JY1yP3tJrsc/f5qzemlBkrCp758HVjNhdon/2jvDCSf+3tt7xynylqJfcTfKEi1ORomHA/vFO+y6lB4mlFSZaOMKG/gWXlpy/vaVqkLRhPGOEo2fTmB5pKECgmVbcw=";
+        string encryptedOtp = "WhGfv1H/I64/pj4b+Ry4H1IXl+SJKLgKAzSbdx1WJhOwc0KKG2UAmPA7XgTVWYjuTynWslVzL2QbfaD0IWPU1BnJwYXNin+yGw+20QipEFxKAbXb+oO7Fz/J6YRkyeF0qeuXef0uTNPYOv27ZiZqfcuZvTK7Flex3CoN4lArY5w8yBfX8sOq4XjkUcArj2SzG31eItqVFB7V6OWTrvvzWPqeWvqnYRLzWG9v7/oPnfkCMXqlsioqhyn/HQ2bIs8ChMEJHH3aBnNW7ptjA1/t8HhFhe9oibIYIRanHTzVKhOrjCyuUnfNh+HQvxx9Z2PcOWLFq6AgnH9JQW4RM2DvM2KO4vam26glc3MGyBYcGxNxgPm9ikIkYmkr3yihGTPiljl6tcU5EI0eY84ju8j3ADVOvCyAVSS8VE0HtDdvH5T7iGQrpUmkt9adj3RrtWKb1xVoXifFIAv32Z8nwjHEsm+rEZcIBJivF0bwzXQEFG7MiCgt8b8uCGS/dqHwqJDFW13yOoHBbEbMJ79ICtnGbgPVjAVGyCdNhxwys6MLS0JY/aahxLQBo+pDJ4HNMhkDz3YeC/448+OSueH+VXOASLPKYhl/CnDCJl/RULxyxI/IpggKnw9DtmjHQ2+M/aj/e7dgLLmjGYVWB+UKKysEs6hY8o01/qASSN0SclY5oSA=";
 
         // Construct request payload
         var requestBody = new

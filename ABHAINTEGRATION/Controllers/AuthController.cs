@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using AbhaProfileApi.Services; // Added for IProfileManagementService
+using AbhaProfileApi.Services;
 
 namespace AbhaProfileApi.Controllers
 {
@@ -135,8 +135,7 @@ namespace AbhaProfileApi.Controllers
         {
             try
             {
-                var xToken = _configuration["Abha:XToken"];
-                var result = await _profileService.GetProfileDetailsAsync(xToken);
+                var result = await _profileService.GetProfileDetailsAsync();
                 return Ok(new { Success = true, Data = result });
             }
             catch (Exception ex)
@@ -154,8 +153,7 @@ namespace AbhaProfileApi.Controllers
         {
             try
             {
-                var xToken = _configuration["Abha:XToken"];
-                var result = await _profileService.GetQrCodeAsync(xToken);
+                var result = await _profileService.GetQrCodeAsync();
                 return Ok(new { Success = true, Data = result });
             }
             catch (Exception ex)
@@ -173,10 +171,8 @@ namespace AbhaProfileApi.Controllers
         {
             try
             {
-                var xToken = _configuration["Abha:XToken"];
                 var encryptedPhoto = _configuration["Abha:EncryptedProfilePhoto"];
-                
-                var result = await _profileService.UpdateProfilePhotoAsync(xToken, encryptedPhoto);
+                var result = await _profileService.UpdateProfilePhotoAsync(encryptedPhoto);
                 return Ok(new { Success = true, Data = result });
             }
             catch (Exception ex)
@@ -194,8 +190,7 @@ namespace AbhaProfileApi.Controllers
         {
             try
             {
-                var xToken = _configuration["Abha:XToken"];
-                var result = await _profileService.DownloadAbhaCardAsync(xToken);
+                var result = await _profileService.DownloadAbhaCardAsync();
                 return Ok(new { Success = true, Data = result });
             }
             catch (Exception ex)

@@ -120,6 +120,8 @@ public class VerifyUserService
 
     private void CacheNewTokens(string token, string refreshToken)
     {
+        _cache.Set("xToken", token, TimeSpan.FromMinutes(55)); // Added xtoken caching
+        Console.WriteLine("✅ X Token retrieved and cached.");
         _cache.Set("jwtToken", token, TimeSpan.FromMinutes(55));
         _cache.Set("refreshToken", refreshToken, TimeSpan.FromDays(7));
     }
